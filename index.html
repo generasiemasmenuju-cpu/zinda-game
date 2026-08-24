@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>ZINDA — Petualangan SPLDV</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#050914;font-family:Arial,Helvetica,sans-serif}
+body{touch-action:none}
+button{font:inherit;border:0;cursor:pointer}
+#app{position:fixed;inset:0;overflow:hidden;background:#050914;color:#fff}
+.screen{position:absolute;inset:0;display:none;overflow:hidden}
+.screen.active{display:block;animation:screenIn .35s ease}
+@keyframes screenIn{from{opacity:0;transform:scale(1.015)}to{opacity:1;transform:scale(1)}}
+
+/* ================= MENU ================= */
+#menu{background:linear-gradient(#080d20,#102b3d 55%,#0a1824)}
+.menu-bg{position:absolute;inset:0;overflow:hidden}
+.moon{position:absolute;width:100px;height:100px;border-radius:50%;right:10%;top:9%;background:#ffe9a7;box-shadow:0 0 45px #ffe9a755}
+.menu-stars{position:absolute;inset:0;background-image:
+radial-gradient(circle,#fff 0 1px,transparent 2px),
+radial-gradient(circle,#7de6ff 0 1px,transparent 2px);
+background-size:120px 90px,190px 140px;animation:starsMove 18s linear infinite;opacity:.8}
+@keyframes starsMove{to{background-position:-120px 90px,-190px -140px}}
+.menu-city{position:absolute;left:0;right:0;bottom:0;height:48%;background:
+linear-gradient(90deg,#10263a 0 8%,#16334a 8% 16%,#0d2437 16% 25%,#183950 25% 35%,#0e293e 35% 46%,#193d53 46% 55%,#0d2538 55% 66%,#17394e 66% 76%,#0e2639 76% 87%,#17384b 87% 100%)}
+.menu-city:after{content:"";position:absolute;inset:12% 0 0;background:
+radial-gradient(circle at 8% 30%,#ffdb61 0 3px,transparent 4px),
+radial-gradient(circle at 18% 60%,#63e6cf 0 3px,transparent 4px),
+radial-gradient(circle at 31% 25%,#ff668e 0 3px,transparent 4px),
+radial-gradient(circle at 47% 48%,#ffd35b 0 3px,transparent 4px),
+radial-gradient(circle at 63% 24%,#61dfff 0 3px,transparent 4px),
+radial-gradient(circle at 80% 57%,#ffdb61 0 3px,transparent 4px),
+radial-gradient(circle at 92% 32%,#65e5d0 0 3px,transparent 4px);
+background-size:170px 130px;animation:blink 2.2s steps(2) infinite}
+@keyframes blink{50%{opacity:.35}}
+.menu-card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+width:min(690px,92vw);padding:30px;text-align:center;border:2px solid #58dfff55;border-radius:28px;
+background:#071526e8;backdrop-filter:blur(10px);box-shadow:0 0 50px #00cfff20}
+.logo{font-size:clamp(48px,9vw,90px);font-weight:1000;letter-spacing:8px;color:#fff;text-shadow:5px 5px #ff6b3d,0 0 25px #38d9ff}
+.tag{font-size:clamp(18px,3vw,28px);font-weight:900;color:#ffd35c;margin:4px 0 8px}
+.desc{font-size:clamp(14px,2vw,19px);color:#d7eaff;margin-bottom:18px}
+.menu-btn{display:block;width:min(430px,92%);margin:13px auto;padding:15px 20px;border-radius:16px;
+background:linear-gradient(90deg,#ffbd38,#ff5c65);color:#101827;font-weight:1000;
+box-shadow:0 7px 0 #a9364b;transition:.16s}
+.menu-btn:active{transform:translateY(5px);box-shadow:0 2px 0 #a9364b}
+.secondary{background:#edf4ff;box-shadow:0 7px 0 #7e94ad}
+.small-note{font-size:12px;color:#9fc1d8;margin-top:14px}
+
+/* ================= GAME ================= */
+#game{background:#050914}
+#gameCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;image-rendering:pixelated}
+.hud{position:absolute;left:14px;right:14px;top:10px;display:flex;justify-content:space-between;align-items:flex-start;z-index:8;pointer-events:none}
+.hud .left,.hud .right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pill,.icon-btn{background:#081827dd;border:1px solid #68dfff55;color:#e9f7ff;box-shadow:0 5px 18px #0007}
+.pill{padding:9px 13px;border-radius:14px;font-weight:900}
+.icon-btn{pointer-events:auto;width:52px;height:46px;border-radius:14px;font-size:23px}
+.icon-btn:active{transform:translateY(3px)}
+#pauseBtn{background:#ffbd38;color:#152036;border-color:#ffd75a}
+.controls{position:absolute;left:0;right:0;bottom:12px;height:135px;z-index:9;pointer-events:none}
+.joystick{position:absolute;left:22px;bottom:0;width:120px;height:120px;border-radius:50%;
+background:#dce8f020;border:2px solid #bde9ff42;box-shadow:inset 0 0 20px #0005;pointer-events:auto;touch-action:none}
+.stick{position:absolute;width:56px;height:56px;left:30px;top:30px;border-radius:50%;
+background:#ffad31e8;box-shadow:0 6px 0 #a85c25;transition:transform .05s}
+.jump{position:absolute;right:24px;bottom:0;width:126px;height:126px;border-radius:50%;
+background:#ff624fe8;color:#fff;font-weight:1000;font-size:17px;pointer-events:auto;touch-action:none;
+box-shadow:0 7px 0 #9d3832}
+.jump:active{transform:translateY(4px)}
+.help{position:absolute;left:50%;bottom:5px;transform:translateX(-50%);padding:8px 14px;
+border-radius:12px;background:#071827cc;color:#d7eaff;font-size:13px;white-space:nowrap}
+#toast{position:absolute;left:50%;top:72px;transform:translateX(-50%);background:#081827ee;
+padding:12px 18px;border-radius:15px;z-index:30;display:none;font-weight:900;text-align:center}
+#pauseShade{position:absolute;inset:0;background:#020711b8;display:none;align-items:center;justify-content:center;z-index:25}
+#pauseShade.show{display:flex}
+.pause-card{width:min(430px,88vw);background:#f5f8fc;color:#13233a;border-radius:25px;padding:28px;text-align:center;box-shadow:0 20px 60px #000b}
+.pause-card h2{margin:0 0 8px;font-size:32px}
+.pause-card p{color:#52667b}
+.pause-btn{display:block;width:100%;margin:11px 0;padding:14px;border-radius:14px;font-weight:1000;background:linear-gradient(90deg,#ffbd38,#ff5c65)}
+.pause-home{background:#e9f1fb}
+.modal{position:absolute;inset:0;background:#020916c8;display:none;align-items:center;justify-content:center;z-index:40;padding:18px}
+.modal.show{display:flex}
+.modal-card{width:min(720px,94vw);max-height:88dvh;overflow:auto;background:#f6f8fc;color:#13233a;border-radius:24px;padding:25px;box-shadow:0 20px 60px #0009}
+.modal-card h2{margin-top:0;color:#1a4f78}
+.modal-card p,.modal-card li{line-height:1.55}
+.choice{width:100%;margin:8px 0;padding:13px;border-radius:12px;background:#e7eef7;text-align:left;font-weight:800}
+.choice.correct{background:#8ee6a0;border:2px solid #32a852}.choice.wrong{background:#ffaaa0;border:2px solid #e04b4b}.quiz-feedback{margin:14px 0 4px;padding:12px 14px;border-radius:14px;background:#dff7e5;color:#176b32;font-weight:1000;text-align:center;animation:popFeedback .28s ease}.quiz-feedback .small{display:block;margin-top:5px;font-size:13px;font-weight:700;color:#315a3d}@keyframes popFeedback{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+#rotate{display:none;position:absolute;inset:0;background:#050914;color:#fff;z-index:100;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:24px}
+.material-card{width:min(850px,94vw);max-height:88dvh;overflow:auto;background:#f6f8fc;color:#17263a;border-radius:24px;padding:26px;box-shadow:0 20px 60px #0009}
+.material-card h2{margin:0 0 12px;color:#184e76}.material-card h3{color:#9b4b21;margin:18px 0 8px}.material-card p,.material-card li{line-height:1.6}.formula{background:#e9f1f8;border-left:5px solid #ffbd38;padding:12px 16px;border-radius:10px;margin:12px 0;font-size:1.05em}.example{background:#fff7df;border:1px solid #f1d48a;padding:14px;border-radius:14px}.material-nav{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px}.material-nav button{min-width:150px}.quiz-solution{background:#eef8f0;border-left:5px solid #36a85a;padding:12px 14px;border-radius:10px;text-align:left;margin-top:12px}.quiz-solution b{color:#176b32}
+@media (orientation:portrait) and (max-width:700px){#rotate{display:flex}}
+@media(max-width:700px){
+ .hud{top:max(6px,env(safe-area-inset-top));left:8px;right:8px}.pill{padding:7px 9px;font-size:12px}.icon-btn{width:45px;height:40px}
+ .controls{height:115px;bottom:max(8px,env(safe-area-inset-bottom))}.joystick{width:100px;height:100px;left:15px}.stick{width:48px;height:48px;left:24px;top:24px}
+ .jump{width:108px;height:108px;right:15px}.help{font-size:11px;bottom:3px}
+}
+@media (orientation:landscape) and (max-height:700px){
+ .menu-card{top:50%;width:min(620px,78vw);padding:12px 20px;border-radius:20px;max-height:calc(100dvh - 24px);overflow:hidden}
+ .menu-card>div:first-child{font-size:12px!important}
+ .menu-card .logo{font-size:clamp(34px,7vh,58px);line-height:.9;letter-spacing:6px}
+ .menu-card .tag{font-size:clamp(15px,3vh,21px);margin:1px 0 4px}
+ .menu-card .desc{font-size:clamp(11px,2vh,14px);margin:0 auto 5px;max-width:520px}
+ .menu-btn{width:min(360px,88%);margin:5px auto;padding:8px 14px;border-radius:12px;font-size:14px;box-shadow:0 5px 0 #a9364b}
+ .secondary{box-shadow:0 5px 0 #7e94ad}
+ .small-note{margin-top:5px;font-size:10px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<section id="menu" class="screen active">
+  <div class="menu-bg">
+    <div class="menu-stars"></div><div class="moon"></div><div class="menu-city"></div>
+  </div>
+  <div class="menu-card">
+    <div style="font-weight:900;color:#42dfff">🎓 GAME EDUKASI MATEMATIKA</div>
+    <div class="logo">ZINDA</div>
+    <div class="tag">PETUALANGAN SPLDV</div>
+    <div class="desc">Jelajahi 3 level, kumpulkan koin, kalahkan rintangan, lalu pecahkan soal SPLDV.</div>
+    <button class="menu-btn" id="startBtn">🎮 MULAI PETUALANGAN</button>
+    <button class="menu-btn secondary" id="materiBtn">📚 MATERI SPLDV</button>
+    <button class="menu-btn secondary" id="guideBtn">💡 PETUNJUK</button>
+    <div class="small-note">Mode HP: LANDSCAPE • Joystick kiri • LOMPAT kanan</div>
+  </div>
+</section>
+
+<section id="game" class="screen">
+  <canvas id="gameCanvas" width="1280" height="720"></canvas>
+
+  <div class="hud">
+    <div class="left">
+      <div class="pill" id="levelHud">LEVEL 1</div>
+      <div class="pill">🪙 <span id="coinHud">0</span></div>
+      <div class="pill">❤️ <span id="lifeHud">3</span></div>
+      <div class="pill">🏆 <span id="scoreHud">0</span></div>
+    </div>
+    <div class="right">
+      <button class="icon-btn" id="pauseBtn" title="Jeda">⏸</button>
+      <button class="icon-btn" id="restartBtn" title="Ulangi level">↻</button>
+      <button class="icon-btn" id="homeBtn" title="Menu utama">⌂</button>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <div class="controls">
+    <div class="joystick" id="joystick"><div class="stick" id="stick"></div></div>
+    <button class="jump" id="jumpBtn">⬆<br>LOMPAT</button>
+    <div class="help">🎮 Tahan joystick untuk bergerak • Tekan LOMPAT untuk melompat</div>
+  </div>
+
+  <div id="pauseShade">
+    <div class="pause-card">
+      <h2>⏸ Permainan Dijeda</h2>
+      <p>Permainan berhenti sementara. Tidak ada karakter atau kamera yang bergerak.</p>
+      <button class="pause-btn" id="resumeBtn">▶ RESUME / LANJUTKAN</button>
+      <button class="pause-btn pause-home" id="pauseHomeBtn">⌂ KEMBALI KE MENU</button>
+    </div>
+  </div>
+</section>
+
+<div class="modal" id="modal"><div class="modal-card" id="modalCard"></div></div>
+<div id="rotate">📱<br><br>Putar HP ke <b>LANDSCAPE</b><br>agar permainan nyaman dimainkan.</div>
+</div>
+
+<script>
+const canvas=document.getElementById("gameCanvas"),ctx=canvas.getContext("2d");
+const menu=document.getElementById("menu"),game=document.getElementById("game");
+const modal=document.getElementById("modal"),modalCard=document.getElementById("modalCard");
+const pauseShade=document.getElementById("pauseShade");
+const levelHud=document.getElementById("levelHud"),coinHud=document.getElementById("coinHud"),lifeHud=document.getElementById("lifeHud"),scoreHud=document.getElementById("scoreHud"),toast=document.getElementById("toast");
+
+const VW=1280,VH=720;
+let level=1,coins=0,lives=3,score=0,cameraX=0,levelWon=false,quizOpen=false,paused=false;
+let last=performance.now();
+const input={left:false,right:false,jump:false};
+let prevJump=false;
+
+const player={x:120,y:500,w:38,h:52,vx:0,vy:0,onGround:true};
+const physics={gravity:1900,speed:360,jump:-760};
+
+const levels=[
+ {name:"Kota Senja",bg:0,
+  platforms:[[0,590,430,35],[510,520,230,35],[820,585,300,35],[1190,505,250,35],[1510,590,430,35],[2020,500,250,35],[2370,590,530,35]],
+  enemies:[[650,482],[1660,552],[2470,552]],coins:[[260,545],[600,475],[960,540],[1290,460],[1750,545],[2140,450],[2510,545]],goal:2780},
+ {name:"Neon School",bg:1,
+  platforms:[[0,590,340,35],[430,505,230,35],[720,420,220,35],[1010,550,300,35],[1410,460,250,35],[1760,590,300,35],[2150,495,260,35],[2500,580,430,35]],
+  enemies:[[500,467],[1080,512],[1510,422],[2230,457],[2620,542]],coins:[[190,545],[500,460],[800,375],[1130,505],[1525,405],[1870,545],[2240,440],[2660,535]],goal:2820},
+ {name:"Pixel Downtown",bg:2,
+  // Level 3 tetap menantang, tetapi seluruh jalur dibuat bertahap dan realistis untuk kontrol HP.
+  // Tidak ada loncatan ekstrem: jarak antarpijakan pendek dan perubahan tinggi bertahap.
+  platforms:[[0,590,340,35],[420,525,250,35],[750,465,240,35],[1060,515,250,35],[1380,455,260,35],[1710,515,250,35],[2010,455,260,35],[2320,505,240,35],[2600,535,400,35]],
+  enemies:[[500,472],[820,412],[1130,462],[1450,402],[1780,462],[2080,402],[2390,452],[2730,482]],
+  coins:[[170,545],[500,480],[820,420],[1130,470],[1450,410],[1780,470],[2080,410],[2390,460],[2750,495]],goal:2920}
+];
+
+let platforms=[],enemies=[],coinObjs=[],goal={x:0,y:0,w:50,h:90};
+
+function updateHud(){
+ levelHud.textContent="LEVEL "+level;
+ coinHud.textContent=coins;
+ lifeHud.textContent=lives;
+ scoreHud.textContent=score;
+}
+
+function toastMsg(t){
+ toast.textContent=t;toast.style.display="block";
+ clearTimeout(toastMsg.timer);
+ toastMsg.timer=setTimeout(()=>toast.style.display="none",1600);
+}
+
+function showModal(html){modalCard.innerHTML=html;modal.classList.add("show")}
+function hideModal(){modal.classList.remove("show")}
+
+function loadLevel(n){
+ level=n;
+ const d=levels[n-1];
+ platforms=d.platforms.map(p=>({x:p[0],y:p[1],w:p[2],h:p[3]}));
+ enemies=d.enemies.map((e,i)=>{
+   // Monster Level 3 bergerak bolak-balik di atas platform, bukan berdiri diam.
+   // Batas patrol dibuat mengikuti platform terdekat agar monster tidak jatuh.
+   const platform=platforms.reduce((best,p)=>Math.abs((p.x+p.w/2)-e[0])<Math.abs((best.x+best.w/2)-e[0])?p:best,platforms[0]);
+   const margin=Math.min(42,Math.max(24,(platform.w-40)/3));
+   // Hanya Level 3 yang memakai monster bergerak. Level 1 dan 2 tetap diam.
+   return {x:e[0],y:e[1],w:40,h:40,alive:true,dir:(i%2===0?1:-1),speed:level===3?78:0,minX:platform.x+margin,maxX:platform.x+platform.w-40-margin,bob:0};
+ });
+ coinObjs=d.coins.map(c=>({x:c[0],y:c[1],r:11,taken:false}));
+ goal={x:d.goal,y:495,w:50,h:95};
+
+ // FIX PENTING: karakter selalu lahir tepat di atas platform pertama.
+ player.x=110;
+ player.y=platforms[0].y-player.h;
+ player.vx=0;player.vy=0;player.onGround=true;
+ cameraX=0;
+ levelWon=false;quizOpen=false;paused=false;
+ pauseShade.classList.remove("show");
+ updateHud();
+ toastMsg("LEVEL "+level+" • "+d.name);
+}
+
+function startGame(){
+ menu.classList.remove("active");
+ game.classList.add("active");
+ coins=0;lives=3;score=0;
+ loadLevel(1);
+}
+
+document.getElementById("startBtn").onclick=startGame;
+document.getElementById("homeBtn").onclick=()=>{paused=false;pauseShade.classList.remove("show");game.classList.remove("active");menu.classList.add("active")};
+document.getElementById("pauseHomeBtn").onclick=()=>{paused=false;pauseShade.classList.remove("show");game.classList.remove("active");menu.classList.add("active")};
+document.getElementById("restartBtn").onclick=()=>{loadLevel(level);toastMsg("↻ Level diulang")};
+
+function setPaused(v){
+ paused=v;
+ pauseShade.classList.toggle("show",paused);
+ if(paused) toastMsg("⏸ Permainan dijeda");
+}
+document.getElementById("pauseBtn").onclick=()=>setPaused(!paused);
+document.getElementById("resumeBtn").onclick=()=>setPaused(false);
+
+let materialPage=1;
+function materialPageHtml(page){
+ if(page===1) return `
+ <div class="material-card">
+ <h2>📚 MATERI SPLDV — 1/3</h2>
+ <p><b>Sistem Persamaan Linear Dua Variabel (SPLDV)</b> adalah dua persamaan linear yang melibatkan dua variabel, biasanya <b>x</b> dan <b>y</b>. Tujuannya adalah menemukan pasangan nilai <b>(x,y)</b> yang memenuhi <b>kedua persamaan sekaligus</b>.</p>
+ <h3>1. Bentuk umum SPLDV</h3>
+ <div class="formula"><b>ax + by = c</b><br><b>dx + ey = f</b></div>
+ <p>Dengan <b>a, b, d, e</b> sebagai koefisien dan <b>c, f</b> sebagai konstanta. Persamaan disebut linear karena variabel tidak berpangkat lebih dari satu.</p>
+ <h3>2. Mengenali SPLDV</h3>
+ <p>Perhatikan pasangan berikut:</p>
+ <div class="example"><b>A.</b> x + 3 = 5 &nbsp; → hanya satu variabel, bukan SPLDV.<br><br><b>B.</b> x + y = 7 dan 2x − y = 3 &nbsp; → <b>SPLDV</b>.<br><br><b>C.</b> x² + y = 5 &nbsp; → ada x², bukan persamaan linear.<br><br><b>D.</b> 3x = 9 &nbsp; → hanya satu variabel.</div>
+ <h3>3. Unsur-unsurnya</h3>
+ <ul><li><b>Variabel:</b> nilai yang belum diketahui, misalnya x dan y.</li><li><b>Koefisien:</b> angka di depan variabel, misalnya 2 pada 2x.</li><li><b>Konstanta:</b> bilangan tanpa variabel, misalnya 7 pada x + y = 7.</li></ul>
+ <div class="material-nav"><button class="menu-btn" onclick="showMaterial(2)">➡️ Halaman 2</button><button class="menu-btn secondary" onclick="hideModal()">Tutup</button></div>
+ </div>`;
+ if(page===2) return `
+ <div class="material-card">
+ <h2>📚 MATERI SPLDV — 2/3</h2>
+ <h3>Metode Eliminasi</h3>
+ <p>Metode eliminasi dilakukan dengan <b>menghilangkan salah satu variabel</b>. Caranya adalah menjumlahkan atau mengurangkan kedua persamaan setelah koefisien variabel yang akan dihilangkan dibuat sama.</p>
+ <div class="example"><b>Contoh:</b><br><br>x + y = 7<br>x − y = 1<br><br>Jumlahkan kedua persamaan:<br><b>2x = 8</b><br><b>x = 4</b><br><br>Substitusikan x = 4 ke x + y = 7:<br>4 + y = 7 → <b>y = 3</b>.</div>
+ <h3>Metode Substitusi</h3>
+ <p>Pada substitusi, salah satu persamaan diubah sehingga satu variabel dinyatakan dalam variabel lainnya, lalu hasilnya dimasukkan ke persamaan kedua.</p>
+ <div class="example">Misalnya x + y = 10 → <b>x = 10 − y</b>. Kemudian bentuk tersebut dimasukkan ke persamaan lainnya sampai diperoleh nilai y, lalu nilai x.</div>
+ <h3>Memeriksa jawaban</h3>
+ <p>Setelah mendapatkan x dan y, masukkan kembali keduanya ke <b>dua persamaan awal</b>. Jika keduanya benar, maka pasangan tersebut adalah penyelesaian SPLDV.</p>
+ <div class="material-nav"><button class="menu-btn secondary" onclick="showMaterial(1)">⬅️ Halaman 1</button><button class="menu-btn" onclick="showMaterial(3)">Halaman 3 ➡️</button></div>
+ </div>`;
+ return `
+ <div class="material-card">
+ <h2>📚 MATERI SPLDV — 3/3</h2>
+ <h3>Penerapan SPLDV dalam kehidupan sehari-hari</h3>
+ <p>SPLDV sering digunakan ketika ada <b>dua jenis benda</b> dengan harga atau jumlah yang belum diketahui. Informasi dari soal cerita diterjemahkan menjadi dua persamaan.</p>
+ <div class="example"><b>Contoh soal:</b><br><br>Di sebuah toko, 2 buku dan 1 pensil berharga <b>Rp11.000</b>. Sedangkan 1 buku dan 2 pensil berharga <b>Rp10.000</b>. Berapakah harga satu buku dan satu pensil?<br><br>Misalkan:<br><b>x = harga satu buku</b><br><b>y = harga satu pensil</b><br><br>Maka:<br><b>2x + y = 11.000</b><br><b>x + 2y = 10.000</b><br><br>Eliminasi y:<br>2(2x + y) = 22.000 → 4x + 2y = 22.000<br>Kurangkan dengan x + 2y = 10.000:<br><b>3x = 12.000 → x = 4.000</b><br><br>Substitusi:<br>4.000 + 2y = 10.000 → <b>y = 3.000</b>.<br><br><b>Jadi harga buku = Rp4.000 dan harga pensil = Rp3.000.</b></div>
+ <h3>Langkah umum soal cerita</h3><ol><li>Tentukan dua hal yang belum diketahui.</li><li>Misalkan keduanya sebagai x dan y.</li><li>Terjemahkan informasi menjadi dua persamaan.</li><li>Pilih metode eliminasi atau substitusi.</li><li>Periksa hasil dan tuliskan kesimpulannya.</li></ol>
+ <div class="material-nav"><button class="menu-btn secondary" onclick="showMaterial(2)">⬅️ Halaman 2</button><button class="menu-btn secondary" onclick="hideModal()">Selesai</button></div>
+ </div>`;
+}
+function showMaterial(page){materialPage=page;showModal(materialPageHtml(page));}
+document.getElementById("materiBtn").onclick=()=>showMaterial(1);
+
+document.getElementById("guideBtn").onclick=()=>showModal(`
+<h2>💡 Petunjuk Permainan</h2>
+<ul>
+<li>🎮 <b>Joystick kiri:</b> tahan ke kiri/kanan untuk bergerak.</li>
+<li>⬆ <b>LOMPAT:</b> tekan saat karakter berada di atas platform.</li>
+<li>🪙 Ambil koin untuk +10 skor.</li>
+<li>👾 Hindari musuh. Jika terkena, nyawa berkurang.</li>
+<li>🏠 Tombol <b>Home</b> di kanan atas kembali ke menu.</li>
+<li>↻ Tombol <b>Restart</b> mengulang level yang sedang dimainkan.</li>
+<li>⏸ Tombol <b>Pause</b> menghentikan permainan.</li>
+<li>▶ <b>Resume</b> melanjutkan permainan setelah pause.</li>
+<li>🏁 Sampai ke bendera untuk membuka soal SPLDV.</li>
+<li>🧠 Jawab soal dengan benar untuk lanjut ke level berikutnya.</li>
+</ul>
+<button class="menu-btn secondary" onclick="hideModal()">Tutup</button>`);
+
+function bindHold(el,prop){
+ const down=e=>{e.preventDefault();input[prop]=true};
+ const up=e=>{e.preventDefault();input[prop]=false};
+ el.addEventListener("pointerdown",down,{passive:false});
+ ["pointerup","pointercancel","pointerleave"].forEach(ev=>el.addEventListener(ev,up,{passive:false}));
+}
+bindHold(document.getElementById("jumpBtn"),"jump");
+
+const joy=document.getElementById("joystick"),stick=document.getElementById("stick");
+function joyMove(e){
+ const r=joy.getBoundingClientRect();
+ const px=e.clientX, dx=Math.max(-42,Math.min(42,px-(r.left+r.width/2)));
+ stick.style.transform=`translateX(${dx}px)`;
+ input.left=dx<-10;input.right=dx>10;
+}
+function joyEnd(){input.left=false;input.right=false;stick.style.transform="translateX(0)"}
+joy.addEventListener("pointerdown",e=>{e.preventDefault();joy.setPointerCapture(e.pointerId);joyMove(e)});
+joy.addEventListener("pointermove",e=>{if(e.buttons)joyMove(e)});
+joy.addEventListener("pointerup",joyEnd);joy.addEventListener("pointercancel",joyEnd);
+
+window.addEventListener("keydown",e=>{
+ if(e.key==="ArrowLeft")input.left=true;
+ if(e.key==="ArrowRight")input.right=true;
+ if(e.code==="Space"||e.key==="ArrowUp")input.jump=true;
+ if(e.code==="Escape")setPaused(!paused);
+});
+window.addEventListener("keyup",e=>{
+ if(e.key==="ArrowLeft")input.left=false;
+ if(e.key==="ArrowRight")input.right=false;
+ if(e.code==="Space"||e.key==="ArrowUp")input.jump=false;
+});
+
+function rectHit(a,b){
+ return a.x+a.w>b.x && a.x<b.x+b.w && a.y+a.h>b.y && a.y<b.y+b.h;
+}
+
+function loseLife(){
+ if(quizOpen||paused)return;
+ lives--;updateHud();
+ if(lives<=0){
+   lives=3;loadLevel(level);
+   toastMsg("❤️ Nyawa habis • level diulang");
+ }else{
+   const p=platforms[0];
+   player.x=110;player.y=p.y-player.h;player.vx=0;player.vy=0;player.onGround=true;
+   cameraX=0;
+   toastMsg("💥 Kena! Kembali ke platform awal");
+ }
+}
+
+function openQuiz(){
+ if(quizOpen)return;
+ quizOpen=true;
+ const q=level===1
+ ?{title:"Mengenali SPLDV",q:"Manakah pasangan persamaan berikut yang merupakan Sistem Persamaan Linear Dua Variabel (SPLDV)?",opts:["A. x + 3 = 5","B. x + y = 7 dan 2x − y = 3","C. x² + y = 5","D. 3x = 9"],ans:1,solution:"Jawaban B. Karena terdiri dari dua persamaan linear dan memiliki dua variabel, yaitu x dan y."}
+ :level===2
+ ?{title:"Menyelesaikan SPLDV",q:"Tentukan nilai x dan y dari: x + y = 8 dan x − y = 2. Pasangan manakah yang benar?",opts:["A. x = 3, y = 5","B. x = 4, y = 4","C. x = 5, y = 3","D. x = 6, y = 2"],ans:2,solution:"Jawaban C. Jumlahkan kedua persamaan: 2x = 10 sehingga x = 5. Substitusi ke x + y = 8: 5 + y = 8, jadi y = 3."}
+ :{title:"Penerapan SPLDV",q:"Di sebuah toko, 2 buku dan 1 pensil berharga Rp11.000. Sedangkan 1 buku dan 2 pensil berharga Rp10.000. Berapakah harga satu buku dan satu pensil?",opts:["A. Buku Rp3.000 dan pensil Rp4.000","B. Buku Rp3.500 dan pensil Rp3.500","C. Buku Rp4.000 dan pensil Rp3.000","D. Buku Rp5.000 dan pensil Rp1.000"],ans:2,solution:"Jawaban C. Misalkan x = harga buku dan y = harga pensil. Dari 2x + y = 11.000 dan x + 2y = 10.000 diperoleh x = 4.000 dan y = 3.000."};
+ showModal(`<div class="material-card"><h2>🧠 SOAL SPLDV — LEVEL ${level}</h2><h3>${q.title}</h3><p>${q.q}</p>
+ ${q.opts.map((o,i)=>`<button class="choice" onclick="answer(${i},${q.ans})">${o}</button>`).join("")}
+ <p id="feedback"></p></div>`);
+}
+
+function answer(i,ans){
+ const bs=[...document.querySelectorAll(".choice")];
+ if(i===ans){
+   bs[i].classList.add("correct"); bs.forEach(b=>b.disabled=true);
+   score+=50;updateHud();
+   const solutions={1:"Jawaban B. Karena ada dua persamaan linear dengan dua variabel x dan y. Persamaan x² + y = 5 tidak linear karena memiliki x².",2:"Jawaban C. x + y = 8 dan x − y = 2. Jika dijumlahkan, 2x = 10 sehingga x = 5. Lalu y = 3.",3:"Jawaban C. Misalkan x = harga buku dan y = harga pensil. Dari 2x + y = 11.000 dan x + 2y = 10.000 diperoleh x = Rp4.000 dan y = Rp3.000."};
+   const feedback=document.getElementById("feedback");
+   if(feedback){feedback.className="quiz-solution";feedback.innerHTML=`<b>✅ JAWABAN BENAR</b><br>${solutions[level]}`;}
+   setTimeout(()=>{
+     hideModal();quizOpen=false;
+     if(level<3){loadLevel(level+1);toastMsg("🎉 Benar! Level berikutnya terbuka.");}
+     else{game.classList.remove("active");menu.classList.add("active");pauseShade.classList.remove("show");paused=false;toastMsg("🏆 ZINDA selesai! Kembali ke menu utama.");}
+   },1800);
+ }else{
+   bs[i].classList.add("wrong");bs.forEach(b=>b.disabled=true);
+   const feedback=document.getElementById("feedback");
+   if(feedback){feedback.className="quiz-feedback";feedback.style.background="#ffe4e0";feedback.style.color="#9c2f27";feedback.innerHTML="❌ JAWABAN SALAH!<span class=\"small\">Level akan diulang dari awal.</span>";}
+   lives--;updateHud();
+   setTimeout(()=>{hideModal();quizOpen=false;if(lives<=0){lives=3;loadLevel(level);toastMsg("❤️ Nyawa habis • LEVEL "+level+" dimulai ulang");}else{loadLevel(level);toastMsg("↩️ Jawaban salah • kembali ke awal LEVEL "+level);}},1100);
+ }
+}
+
+function update(dt){
+ if(!game.classList.contains("active")||paused||quizOpen)return;
+
+ let dir=(input.right?1:0)-(input.left?1:0);
+ player.vx += (dir*physics.speed-player.vx)*Math.min(1,dt*12);
+ if(dir===0)player.vx*=Math.pow(0.0001,dt);
+
+ if(input.jump&&!prevJump&&player.onGround){
+   player.vy=physics.jump;player.onGround=false;
+ }
+ prevJump=input.jump;
+
+ const oldY=player.y;
+ player.vy+=physics.gravity*dt;
+ player.x+=player.vx*dt;
+ player.y+=player.vy*dt;
+ player.onGround=false;
+
+ // Collision dari atas: karakter mendarat tepat di platform.
+ for(const p of platforms){
+   if(player.x+player.w>p.x && player.x<p.x+p.w &&
+      oldY+player.h<=p.y+8 && player.y+player.h>=p.y &&
+      player.vy>=0){
+     player.y=p.y-player.h;
+     player.vy=0;
+     player.onGround=true;
+   }
+ }
+ if(player.x<0){player.x=0;player.vx=0}
+
+ for(const c of coinObjs){
+   if(!c.taken && Math.abs(player.x+player.w/2-c.x)<28 && Math.abs(player.y+player.h/2-c.y)<35){
+     c.taken=true;coins++;score+=10;updateHud();
+   }
+ }
+
+ for(const e of enemies){
+   if(!e.alive)continue;
+   // Monster hanya bergerak pada Level 3. Level 1 dan 2 tetap diam.
+   if(level===3 && e.maxX>e.minX){
+     e.x += e.dir*e.speed*dt;
+     if(e.x<=e.minX){e.x=e.minX;e.dir=1}
+     if(e.x>=e.maxX){e.x=e.maxX;e.dir=-1}
+   }
+   // Efek naik-turun juga hanya untuk monster Level 3.
+   if(level===3)e.bob=(e.bob||0)+dt*3;
+   const eb={x:e.x,y:e.y+(level===3?Math.sin(e.bob)*3:0),w:e.w,h:e.h};
+   if(rectHit(player,eb)){
+     if(player.vy>150 && player.y+player.h<eb.y+25){
+       e.alive=false;player.vy=-430;score+=20;updateHud();
+     }else{loseLife();return}
+   }
+ }
+
+ if(player.y>VH+80){loseLife();return}
+ if(player.x+player.w>goal.x){openQuiz();return}
+
+ // Kamera tidak pernah mendahului karakter.
+ const target=Math.max(0,player.x-VW*0.30);
+ const maxCam=Math.max(0,levels[level-1].goal-VW+120);
+ cameraX += (Math.min(target,maxCam)-cameraX)*Math.min(1,dt*7);
+}
+
+function drawPixelSky(t,kind){
+ const colors=[
+  ["#06101e","#0b2f43","#103b4d"],
+  ["#0b0a22","#211343","#3b1f50"],
+  ["#050817","#0d2140","#123f53"]
+ ][kind];
+ const g=ctx.createLinearGradient(0,0,0,VH);
+ g.addColorStop(0,colors[0]);g.addColorStop(.55,colors[1]);g.addColorStop(1,colors[2]);
+ ctx.fillStyle=g;ctx.fillRect(0,0,VW,VH);
+
+ // Stars move independently from the stage.
+ for(let i=0;i<65;i++){
+   const x=((i*197-t*(10+i%5))%(VW+80)+VW+80)%(VW+80)-40;
+   const y=35+(i*53)%350;
+   ctx.fillStyle=i%8===0?"#ffd85a":"#b9dcff";
+   ctx.fillRect(Math.floor(x),Math.floor(y),2+(i%2),2+(i%2));
+ }
+
+ // Parallax city: always visible behind platforms.
+ for(let layer=0;layer<3;layer++){
+   const bw=[120,90,65][layer],speed=[.10,.22,.38][layer];
+   const base=550+layer*12;
+   for(let i=-3;i<18;i++){
+     let x=i*bw-((cameraX*speed)%bw);
+     let bh=100+((i*41+layer*73)%170);
+     ctx.fillStyle=["#0a1d2d","#103247","#15465a"][layer];
+     ctx.fillRect(x,base-bh,bw-9,bh);
+     ctx.fillStyle=layer===2?"#54d8c4":"#477d93";
+     for(let wy=base-bh+20;wy<base-18;wy+=28)
+       for(let wx=x+14;wx<x+bw-16;wx+=24)
+         if(((Math.floor(wx)+Math.floor(wy)+i)%3)!==0)ctx.fillRect(wx,wy,6,8);
+   }
+ }
+
+ // Moving moon / neon sign.
+ const mx=1020-((cameraX*.05)%120),my=95+Math.sin(t*.0004)*5;
+ ctx.fillStyle="#ffe7a1";ctx.beginPath();ctx.arc(mx,my,34,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle="#ff4d8d";ctx.shadowBlur=18;ctx.shadowColor="#ff4d8d";
+ const nx=((t*.18)%1500)-180;ctx.fillRect(nx,175,100,7);ctx.shadowBlur=0;
+}
+
+function drawWorld(t){
+ ctx.save();
+ ctx.translate(-cameraX,0);
+
+ // Ground strip — keeps the level visually anchored.
+ ctx.fillStyle="#07131f";ctx.fillRect(-100,610,levels[level-1].goal+500,110);
+ for(let x=-100;x<levels[level-1].goal+500;x+=120){
+   ctx.fillStyle="#213b4d";ctx.fillRect(x,660,65,5);
+ }
+
+ // Platforms.
+ for(const p of platforms){
+   ctx.fillStyle="#172735";ctx.fillRect(p.x,p.y,p.w,p.h+10);
+   ctx.fillStyle="#43d879";ctx.fillRect(p.x,p.y,p.w,9);
+   ctx.fillStyle="#1c8254";ctx.fillRect(p.x,p.y+9,p.w,10);
+   // Pixel bolts
+   ctx.fillStyle="#86f5a7";
+   for(let bx=p.x+18;bx<p.x+p.w-10;bx+=42)ctx.fillRect(bx,p.y+24,7,4);
+ }
+
+ // Coins.
+ for(const c of coinObjs)if(!c.taken){
+   const bob=Math.sin(t*.006+c.x)*5;
+   ctx.fillStyle="#ffd447";ctx.fillRect(c.x-10,c.y-10+bob,20,20);
+   ctx.fillStyle="#fff1a0";ctx.fillRect(c.x-4,c.y-7+bob,4,14);
+ }
+
+ // Enemies.
+ for(const e of enemies)if(e.alive){
+   const yy=e.y+Math.sin((t/220)+e.x)*3;
+   ctx.fillStyle="#9b4fff";ctx.fillRect(e.x,yy,e.w,e.h);
+   ctx.fillStyle="#17132d";ctx.fillRect(e.x+7,yy+10,7,7);ctx.fillRect(e.x+26,yy+10,7,7);
+   ctx.fillStyle="#d59aff";ctx.fillRect(e.x+9,yy+29,22,5);
+ }
+
+ // Goal.
+ ctx.fillStyle="#ffce43";ctx.fillRect(goal.x,goal.y,8,95);
+ ctx.fillStyle="#ff5f69";ctx.beginPath();
+ ctx.moveTo(goal.x+8,goal.y);ctx.lineTo(goal.x+65,goal.y+19);ctx.lineTo(goal.x+8,goal.y+38);ctx.closePath();ctx.fill();
+
+ // Player.
+ const x=player.x,y=player.y;
+ ctx.fillStyle="#ffd36b";ctx.fillRect(x+7,y+2,24,22);
+ ctx.fillStyle="#16283c";ctx.fillRect(x+11,y+7,16,11);
+ ctx.fillStyle="#53d8ff";ctx.fillRect(x+9,y+26,20,19);
+ ctx.fillStyle="#ff765d";ctx.fillRect(x+2,y+28,8,17);ctx.fillRect(x+28,y+28,8,17);
+ ctx.fillStyle="#f1f5ff";ctx.fillRect(x+8,y+45,9,7);ctx.fillRect(x+23,y+45,9,7);
+ ctx.fillStyle="#ffffff66";ctx.fillRect(x+3,y-6,32,3);
+
+ ctx.restore();
+}
+
+function draw(t){
+ ctx.clearRect(0,0,VW,VH);
+ drawPixelSky(t,levels[level-1].bg);
+ drawWorld(t);
+
+ // Slight dark gradient at bottom for controls readability.
+ const g=ctx.createLinearGradient(0,540,0,720);
+ g.addColorStop(0,"transparent");g.addColorStop(1,"#0008");
+ ctx.fillStyle=g;ctx.fillRect(0,540,VW,180);
+}
+
+function loop(now){
+ const dt=Math.min(.032,(now-last)/1000||.016);
+ last=now;
+ update(dt);
+ draw(now);
+ requestAnimationFrame(loop);
+}
+loadLevel(1);
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
